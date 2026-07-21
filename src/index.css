@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #047857; /* Un verde oscuro institucional y elegante */
+  --color-primary-light: #10b981;
+  --color-status-green: #22c55e;
+  --color-status-amber: #f59e0b;
+  --color-status-red: #ef4444;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
