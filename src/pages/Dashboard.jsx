@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
-import { Clock, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Clock, CheckCircle2, AlertCircle, AlertTriangle, Search } from 'lucide-react';
 import { isBefore, isToday, addDays } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
   const [empleados, setEmpleados] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
 
   useEffect(() => {
@@ -94,6 +95,10 @@ export default function Dashboard() {
     }
   };
 
+  const filteredEmpleados = empleados.filter(emp => 
+    emp.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -104,7 +109,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-slate-500 mt-1">Vista general del progreso de los nuevos ingresos.</p>
@@ -119,7 +124,22 @@ export default function Dashboard() {
         )}
       </div>
 
-      {empleados.length === 0 ? (
+      <div className="mb-6 max-w-md">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-slate-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar por nombre completo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-primary focus:border-primary outline-none"
+          />
+        </div>
+      </div>
+
+      {filteredEmpleados.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-slate-400" />
@@ -134,7 +154,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {empleados.map((emp) => (
+          {filteredEmpleados.map((emp) => (
             <Link 
               key={emp.id} 
               to={user?.role === 'admin' ? `/employee/${emp.id}` : '#'} 

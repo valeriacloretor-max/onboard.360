@@ -14,7 +14,7 @@ export default function NewOnboarding() {
     cargo: '',
     area: '',
     fecha_ingreso: format(new Date(), 'yyyy-MM-dd'),
-    plantilla_id: ''
+    plantillas_ids: []
   });
 
   useEffect(() => {
@@ -25,47 +25,54 @@ export default function NewOnboarding() {
     const { data, error } = await supabase.from('plantillas').select('id, nombre');
     if (!error && data) {
       setPlantillas(data);
-      if (data.length > 0) {
-        setFormData(prev => ({ ...prev, plantilla_id: data[0].id }));
-      }
     }
   }
 
+  const togglePlantilla = (id) => {
+    setFormData(prev => {
+      const isSelected = prev.plantillas_ids.includes(id);
+      return {
+        ...prev,
+        plantillas_ids: isSelected 
+          ? prev.plantillas_ids.filter(pId => pId !== id)
+          : [...prev.plantillas_ids, id]
+      };
+    });
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!formData.nombre || !formData.cargo || !formData.area || !formData.fecha_ingreso || !formData.plantilla_id) {
-      alert("Por favor completa todos los campos.");
+    if (!formData.nombre || !formData.cargo || !formData.area || !formData.fecha_ingreso || formData.plantillas_ids.length === 0) {
+      alert("Por favor completa todos los campos y selecciona al menos una plantilla.");
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Create Empleado
+      // 1. Create Empleado (omitimos plantilla_id ya que ahora son múltiples y la FK es opcional en la DB)
       const { data: empData, error: empError } = await supabase
         .from('empleados')
         .insert([{
           nombre: formData.nombre,
           cargo: formData.cargo,
           area: formData.area,
-          fecha_ingreso: formData.fecha_ingreso,
-          plantilla_id: formData.plantilla_id
+          fecha_ingreso: formData.fecha_ingreso
         }])
         .select()
         .single();
         
       if (empError) throw empError;
 
-      // 2. Fetch template tasks
+      // 2. Fetch template tasks para TODAS las plantillas seleccionadas
       const { data: tareasPlantilla, error: tareasError } = await supabase
         .from('tareas_plantilla')
         .select('*')
-        .eq('plantilla_id', formData.plantilla_id);
+        .in('plantilla_id', formData.plantillas_ids);
         
       if (tareasError) throw tareasError;
 
       // 3. Create real tasks for the employee
       const fechaIngresoDate = new Date(formData.fecha_ingreso);
-      // Ajustar zona horaria local para que addDays no se desfase por la hora
       fechaIngresoDate.setMinutes(fechaIngresoDate.getMinutes() + fechaIngresoDate.getTimezoneOffset());
 
       if (tareasPlantilla && tareasPlantilla.length > 0) {
@@ -174,17 +181,21 @@ export default function NewOnboarding() {
                   <p className="text-xs text-slate-500 mt-1.5">Las fechas límite se calcularán a partir de este día.</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Plantilla a utilizar</label>
-                  <select 
-                    value={formData.plantilla_id}
-                    onChange={(e) => setFormData({...formData, plantilla_id: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  >
-                    {plantillas.length === 0 && <option value="">No hay plantillas disponibles</option>}
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Plantillas a utilizar (Puedes seleccionar varias)</label>
+                  <div className="w-full border border-slate-300 rounded-lg max-h-48 overflow-y-auto bg-slate-50 p-2 space-y-1">
+                    {plantillas.length === 0 && <p className="text-sm text-slate-500 p-2">No hay plantillas disponibles</p>}
                     {plantillas.map(p => (
-                      <option key={p.id} value={p.id}>{p.nombre}</option>
+                      <label key={p.id} className="flex items-center gap-3 p-2 hover:bg-slate-100 rounded cursor-pointer transition-colors border border-transparent hover:border-slate-200">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.plantillas_ids.includes(p.id)}
+                          onChange={() => togglePlantilla(p.id)}
+                          className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium text-slate-700">{p.nombre}</span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
                 </div>
               </div>
             </div>

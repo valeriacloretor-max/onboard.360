@@ -216,7 +216,7 @@ export default function Templates() {
                       {index + 1}
                     </div>
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
-                      <div className="md:col-span-4">
+                      <div className="md:col-span-5">
                         <input 
                           type="text" 
                           value={tarea.nombre_tarea}
@@ -225,7 +225,7 @@ export default function Templates() {
                           placeholder="Descripción de la tarea"
                         />
                       </div>
-                      <div className="md:col-span-3">
+                      <div className="md:col-span-4">
                         <select 
                           value={tarea.etapa}
                           onChange={(e) => updateTarea(tarea.id, 'etapa', e.target.value)}
@@ -234,7 +234,7 @@ export default function Templates() {
                           {ETAPAS.map(etp => <option key={etp.id} value={etp.id}>{etp.label}</option>)}
                         </select>
                       </div>
-                      <div className="md:col-span-2">
+                      <div className="md:col-span-3">
                         <select 
                           value={tarea.responsable_tipo}
                           onChange={(e) => updateTarea(tarea.id, 'responsable_tipo', e.target.value)}
@@ -242,15 +242,6 @@ export default function Templates() {
                         >
                           {RESPONSABLES.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
-                      </div>
-                      <div className="md:col-span-3 flex items-center gap-2">
-                        <input 
-                          type="number" 
-                          value={tarea.dias_desde_ingreso}
-                          onChange={(e) => updateTarea(tarea.id, 'dias_desde_ingreso', parseInt(e.target.value) || 0)}
-                          className="w-16 px-3 py-1.5 border border-slate-300 rounded-md text-sm"
-                        />
-                        <span className="text-xs text-slate-500">Días desde inicio</span>
                       </div>
                     </div>
                     <button 
