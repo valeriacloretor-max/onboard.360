@@ -1,21 +1,33 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
   FileText, 
   History, 
-  UserPlus
+  UserPlus,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Nuevo Onboarding', href: '/new', icon: UserPlus },
-    { name: 'Plantillas', href: '/templates', icon: FileText },
-    { name: 'Historial', href: '/history', icon: History },
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Filtrar navegación por rol
+  const allNavigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'director'] },
+    { name: 'Nuevo Onboarding', href: '/new', icon: UserPlus, roles: ['admin'] },
+    { name: 'Plantillas', href: '/templates', icon: FileText, roles: ['admin'] },
+    { name: 'Historial', href: '/history', icon: History, roles: ['admin'] },
   ];
+
+  const navigation = allNavigation.filter(item => item.roles.includes(user?.role));
 
   return (
     <div className="min-h-screen flex bg-slate-50">
@@ -49,14 +61,19 @@ export default function Layout() {
         </nav>
 
         <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center gap-3 px-4 py-2">
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-sm font-medium text-slate-600">
-              RH
+          <div className="flex items-center justify-between px-2 py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-sm font-medium text-slate-600 uppercase">
+                {user?.username.substring(0, 2)}
+              </div>
+              <div className="text-sm">
+                <p className="font-medium text-slate-900">{user?.username}</p>
+                <p className="text-slate-500 text-xs capitalize">{user?.role}</p>
+              </div>
             </div>
-            <div className="text-sm">
-              <p className="font-medium text-slate-900">Recursos Humanos</p>
-              <p className="text-slate-500 text-xs">Admin</p>
-            </div>
+            <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Cerrar sesión">
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

@@ -3,10 +3,12 @@ import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { Clock, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
 import { isBefore, isToday, addDays } from 'date-fns';
+import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
   const [empleados, setEmpleados] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchDashboardData();
@@ -107,12 +109,14 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-slate-500 mt-1">Vista general del progreso de los nuevos ingresos.</p>
         </div>
-        <Link 
-          to="/new" 
-          className="bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2"
-        >
-          <span>+ Nuevo Onboarding</span>
-        </Link>
+        {user?.role === 'admin' && (
+          <Link 
+            to="/new" 
+            className="bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2"
+          >
+            <span>+ Nuevo Onboarding</span>
+          </Link>
+        )}
       </div>
 
       {empleados.length === 0 ? (
@@ -122,18 +126,24 @@ export default function Dashboard() {
           </div>
           <h3 className="text-xl font-semibold text-slate-900 mb-2">Todo al día</h3>
           <p className="text-slate-500 mb-6">No hay empleados en proceso de onboarding actualmente.</p>
-          <Link to="/new" className="text-primary font-medium hover:underline">
-            Comenzar un nuevo proceso
-          </Link>
+          {user?.role === 'admin' && (
+            <Link to="/new" className="text-primary font-medium hover:underline">
+              Comenzar un nuevo proceso
+            </Link>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {empleados.map((emp) => (
-            <Link key={emp.id} to={`/employee/${emp.id}`} className="block group">
+            <Link 
+              key={emp.id} 
+              to={user?.role === 'admin' ? `/employee/${emp.id}` : '#'} 
+              className={`block group ${user?.role === 'director' ? 'cursor-default' : ''}`}
+            >
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">
+                    <h3 className={`text-lg font-bold text-slate-900 ${user?.role === 'admin' ? 'group-hover:text-primary transition-colors' : ''}`}>
                       {emp.nombre}
                     </h3>
                     <p className="text-sm text-slate-500">{emp.cargo} • {emp.area}</p>
